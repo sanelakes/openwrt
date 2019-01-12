@@ -1,0 +1,5 @@
+if [ "$ACTION" = "add" -o "$ACTION" = "remove" ];
+then
+	TRIGGER="$( cat /sys/class/leds/nw762b:green:usb/trigger | grep -o '\[.\+\]' )"
+	[ $TRIGGER != "[usbport]" ] && echo "usbport" > /sys/class/leds/nw762b:green:usb/trigger
+fi
