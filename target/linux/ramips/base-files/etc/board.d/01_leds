@@ -13,6 +13,9 @@ boardname="${board##*,}"
 board_config_update
 
 case $board in
+nw762b)
+	set_wifi_led "$boardname:green:wifi"
+	;;
 3g-6200n)
 	set_wifi_led "$boardname:amber:wlan"
 	;;

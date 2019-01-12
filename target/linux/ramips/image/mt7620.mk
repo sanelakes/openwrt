@@ -16,6 +16,14 @@ define Build/elecom-header
 		-f $@ -C $(KDIR) v_0.0.0.bin v_0.0.0.md5
 endef
 
+define Device/nw762b
+  DTS := NW762B
+  IMAGE_SIZE := $(ralink_default_fw_size_16M)
+  DEVICE_TITLE := Netcore NW762B
+  DEVICE_PACKAGES := kmod-mt76x2
+endef
+TARGET_DEVICES += nw762b
+
 define Device/ai-br100
   DTS := AI-BR100
   IMAGE_SIZE := 7936k
