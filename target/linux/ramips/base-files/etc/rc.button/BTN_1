@@ -1,0 +1,77 @@
+#!/bin/sh
+
+# debugging message
+# echo "Procd -> button: ${BUTTON}, action: ${ACTION}" >> /dev/console 
+
+. /lib/functions.sh
+
+case "$ACTION" in
+pressed)
+	return 6
+;;
+timeout)
+	poweroff
+	# exec /sbin/wifiswitch
+;;
+released)
+	if [ "$SEEN" -lt 1 ]
+	then
+		USBPLUGIN="$( ls /proc/scsi/usb-storage )"
+		if [[ -z "$USBPLUGIN" ]]
+		then
+			echo "No USB device detected." > /dev/console
+			logger "No USB device detected."
+		elif [[ -n "$( df | grep 'sd[a-z]' )" ]]
+		then
+			for i in $( df | awk '/dev\/sd[a-z]/ { print $1 }' )
+			do
+				umount $i
+				echo "Umounting ${i} ..." > /dev/console
+				logger "Umounting ${i} ..."
+				sleep 0.3
+				if [[ -n "$( df | grep ${i} )" ]]
+				then
+					echo "Can not umount ${i}, device may busy." > /dev/console
+					logger "Can not umount ${i}, device may busy."
+				else
+					echo "Umount ${i} successful." > /dev/console
+					logger "Umount ${i} successful."
+				fi
+			done
+			sleep 0.3
+			USBNAME="$( ls /sys/block/ | grep -o sd[a-z] )"
+			USBSTATUS="$( cat /sys/block/${USBNAME}/stat | awk '{ print $9 }' )"
+			BLOCKS="$( df | grep ${USBNAME} )"
+			if [[ $USBSTATUS == "0" ]] && [[ -z $BLOCKS ]]
+			then
+				hd-idle -t $USBNAME
+				sleep 0.6
+				echo "timer" > /sys/class/leds/nw762b:green:usb/trigger
+				echo "USB device now can be safely removed." > /dev/console
+				logger "USB device now can be safely removed."
+			else
+				echo "USB device are busy now." > /dev/console
+				logger "USB device are busy now."
+			fi
+		fi
+	elif [ "$SEEN" -ge 1 -a "$SEEN" -lt 4 ]
+	then
+		WIFIUP="$( wifi status | grep -Eo '"up":\s?\w*' | awk '{print $2}' )"
+		if [ $( cat /etc/config/wireless | grep ssid | wc -l ) == $( cat /etc/config/wireless | grep disabled | wc -l ) ]
+		then
+			echo "All wireless access point is disabled." > /dev/console
+			logger "All wireless access point is disabled."
+		elif [[ "$WIFIUP" == "true" ]]
+		then
+			wifi down
+			# echo "WiFi now turn off." > /dev/console
+		elif [[ "$WIFIUP" == "false" ]]
+		then
+			wifi up
+			# echo "WiFi now turn on." > /dev/console
+		fi
+	fi
+;;
+esac
+
+return 0

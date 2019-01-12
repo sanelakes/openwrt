@@ -31,6 +31,7 @@ ramips_setup_interfaces()
 	local board="$1"
 
 	case $board in
+	nw762b|\
 	11acnas|\
 	d-team,newifi-d2|\
 	w2914nsv2|\
